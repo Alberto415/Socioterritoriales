@@ -4,22 +4,34 @@ const cors    = require('cors');
 const path    = require('path');
 
 const app = express();
-app.use(cors());
+
+// =====================================================================
+// Configuración de CORS estricta para tu Frontend en GitHub Pages
+// =====================================================================
+app.use(cors({
+    origin: 'https://alberto415.github.io'
+}));
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+// =====================================================================
+// Conexión mediante Pool adaptada para Variables de Entorno y SSL (Aiven)
+// =====================================================================
 const pool = mysql.createPool({
-    host:     'localhost',
-    port:     3306,
-    user:     'root',
-    password: 'jugarxbox',  // Tu contraseña activa
-    database: 'cooperacion_desarrollo',
+    host:               process.env.DB_HOST     || 'localhost',
+    port:               process.env.DB_PORT     || 3306,
+    user:               process.env.DB_USER     || 'root',
+    password:           process.env.DB_PASSWORD || 'jugarxbox',
+    database:           process.env.DB_NAME     || 'cooperacion_desarrollo',
     waitForConnections: true,
     connectionLimit:    10,
+    // Obligatorio para que Aiven acepte la conexión segura en internet
+    ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : false
 });
 
 // =====================================================================
-// GET: Obtener todos los programas (Regresado a 'id' como pide tu MySQL)
+// GET: Obtener todos los programas
 // =====================================================================
 app.get('/api/programas', async (req, res) => {
     try {
@@ -42,7 +54,6 @@ app.post('/api/programas', async (req, res) => {
             return res.status(400).json({ error: 'El nombre del programa es obligatorio.' });
         }
 
-        // Verifica si ya existe para no duplicarlo en tus pruebas
         const [existing] = await pool.query(
             'SELECT id FROM programas WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(?))',
             [d.nombre]
@@ -138,8 +149,10 @@ app.delete('/api/programas/:id', async (req, res) => {
     }
 });
 
-const PORT = 3000;
+// =====================================================================
+// Puerto dinámico asignado por el hosting (Render) o 3000 por defecto local
+// =====================================================================
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-    console.log(`API disponible en http://localhost:${PORT}/api/programas`);
+    console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
