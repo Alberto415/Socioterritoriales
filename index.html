@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cooperación al Desarrollo — Panel de Programas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Cooperación al Desarrollo</h1>
+          <p>Panel de gestión de programas</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-ghost" id="btnReset" title="Restaurar datos de ejemplo">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Restaurar datos
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-text">
+        <h2>Programas de cooperación internacional</h2>
+      </div>
+      <button class="btn-primary" id="btnNew">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nuevo programa
+      </button>
+    </section>
+
+    <section class="stats" id="stats"></section>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" id="search" placeholder="Buscar por nombre, país, organización, ubicación..." />
+      </div>
+      <select class="filter-select" id="filterEstado">
+        <option value="">Todos los estados</option>
+        <option value="activo">Activo</option>
+        <option value="finalizado">Finalizado</option>
+        <option value="planificado">Planificado</option>
+      </select>
+      <select class="filter-select" id="filterCategoria">
+        <option value="">Todas las categorías</option>
+      </select>
+      <select class="filter-select" id="filterAlcance">
+        <option value="">Todo el alcance</option>
+        <option value="nacional">Nacional</option>
+        <option value="internacional">Internacional</option>
+      </select>
+    </div>
+
+    <section class="grid" id="grid"></section>
+
+    <div class="pagination-container">
+      <button id="btnPrev" class="btn-secondary">&laquo; Anterior</button>
+      <span id="pageInfo">Página 1 de 1</span>
+      <button id="btnNext" class="btn-secondary">Siguiente &raquo;</button>
+    </div>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal" role="dialog" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">Nuevo programa de cooperación</div>
+        <div class="modal-subtitle">Completa los datos del programa georreferenciado</div>
+      </div>
+      <button class="modal-close" id="btnClose" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form id="form" novalidate>
+        <div class="form-grid">
+
+          <div class="field full">
+            <label for="f-nombre">Nombre del programa <span class="req">*</span></label>
+            <input id="f-nombre" name="nombre" type="text" maxlength="200" required placeholder="Ej. Programa de Educación Rural" />
+            <span class="err"></span>
+          </div>
+
+          <div class="field full">
+            <label for="f-descripcion">Descripción</label>
+            <textarea id="f-descripcion" name="descripcion" maxlength="600" placeholder="Describe brevemente los objetivos y alcance del programa..."></textarea>
+            <span class="hint">Máx. 600 caracteres.</span>
+            <span class="err"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-beneficiario">País beneficiario <span class="req">*</span></label>
+            <select id="f-beneficiario" name="pais_beneficiario" required></select>
+            <span class="err"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-creador">País creador / financiador <span class="req">*</span></label>
+            <select id="f-creador" name="pais_creador" required></select>
+            <span class="err"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-alcance">Tipo de alcance <span class="req">*</span></label>
+            <select id="f-alcance" name="tipo_alcance" required>
+              <option value="nacional">Nacional</option>
+              <option value="internacional" selected>Internacional</option>
+            </select>
+            <span class="err"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-estado">Estado <span class="req">*</span></label>
+            <select id="f-estado" name="estado" required>
+              <option value="activo" selected>Activo</option>
+              <option value="planificado">Planificado</option>
+              <option value="finalizado">Finalizado</option>
+            </select>
+            <span class="err"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-fecha">Fecha de inicio <span class="req">*</span></label>
+            <input id="f-fecha" name="fecha_inicio" type="date" required />
+            <span class="err"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-monto">Monto financiado (USD) <span class="req">*</span></label>
+            <input id="f-monto" name="monto" type="number" min="0" step="0.01" required placeholder="0.00" />
+            <span class="err"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-tipo-apoyo">Tipo de apoyo técnico/recurso <span class="req">*</span></label>
+            <select id="f-tipo-apoyo" name="tipo_apoyo" required>
+              <option value="Económico / Financiero">Económico / Financiero</option>
+              <option value="Asistencia Técnica">Asistencia Técnica</option>
+              <option value="Insumos / Especie">Insumos / Especie</option>
+              <option value="Capacitación">Capacitación</option>
+              <option value="Mixto (Económico y Técnico)">Mixto (Económico y Técnico)</option>
+            </select>
+            <span class="err"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-categoria">Categoría <span class="req">*</span></label>
+            <select id="f-categoria" name="categoria" required></select>
+            <span class="err"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-organizacion">Organización ejecutora <span class="req">*</span></label>
+            <select id="f-organizacion" name="organizacion" required></select>
+            <span class="err"></span>
+          </div>
+
+          <div class="field full">
+            <label for="f-ubicacion">Ubicación Geográfica / Región <span class="req">*</span></label>
+            <input id="f-ubicacion" name="ubicacion" type="text" required placeholder="Ej. Altiplano Occidental, San Marcos" />
+            <span class="err"></span>
+          </div>
+
+          <div class="field full">
+            <label>Punto de referencia en mapa (Haz clic para marcar coordenadas)</label>
+            <div id="mapa-formulario" style="height: 250px; border-radius: 6px; border: 1px solid #e2e8f0; z-index: 1;"></div>
+            <input type="hidden" id="f-lat" name="lat">
+            <input type="hidden" id="f-lon" name="lon">
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <div class="counter" id="counter">
+        Gestión avanzada de programas de desarrollo
+      </div>
+      <div class="footer-actions">
+        <button class="btn-secondary" id="btnCancel">Cancelar</button>
+        <button class="btn-success" id="btnSave">Guardar programa</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
