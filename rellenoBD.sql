@@ -377,3 +377,13 @@ INSERT INTO programas_financiamientos (id_programa, id_financiamiento) VALUES
 INSERT INTO programas_evaluaciones (id_programa, id_evaluacion) VALUES
                                                                     (1,1),(2,2),(3,3),(4,4),(5,5),(7,6),(8,7),(9,8),(10,9),(11,10),
                                                                     (20,20),(22,22),(29,29),(33,33),(40,40),(44,44),(49,49),(53,53),(61,61),(63,63),(70,70),(73,73);
+
+-- =====================================================================
+-- 11. SINCRONIZAR programas.monto CON financiamientos (vía la tabla puente)
+--     Esto deja la columna plana "monto" lista para el endpoint de
+--     estadísticas por país sin tener que tocar la API que ya usa el front.
+-- =====================================================================
+UPDATE programas p
+    JOIN programas_financiamientos pf ON pf.id_programa = p.id
+    JOIN financiamientos f            ON f.id = pf.id_financiamiento
+SET p.monto = f.monto;
